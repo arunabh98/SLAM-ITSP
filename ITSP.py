@@ -1,7 +1,7 @@
 from math import *
 import Rpi_stepper
 import ultrasonic
-# import time
+import time
 
 '''
 The first two values in bot coordinates stand for x and y values.
@@ -166,7 +166,7 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
 def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location):
     if 'L' in possible_heading_direction:
         print "LEFT"
-        Rpi_stepper.move_left
+        Rpi_stepper.move_left()
         Rpi_stepper.move_forward()
         bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location)
@@ -222,6 +222,7 @@ def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_lo
         print possible_heading_direction
         move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location)
         print bot_coordinates
+        time.sleep(5)
 
 '''
 The bot has to move exactly 20cm forward while moving from one
@@ -277,7 +278,7 @@ block_visit_frequency = [[0, 0, 0, 0, 0, 0, 0],
 # landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
 # for x in map_environment:
 #     print x
-# run(map_environment, block_visit_frequency, [1, 1, 1], [30, 30])
+run(map_environment, block_visit_frequency, [3, 3, 0], [70, 70])
 '''
 0 1 East 1
 0 -1 West 3
