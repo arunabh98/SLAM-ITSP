@@ -6,9 +6,9 @@ GPIO.cleanup()
 # instead of physical pin numbers
 GPIO.setmode(GPIO.BCM)
 ultrasonic1_pins = [7, 8]
-ultrasonic2_pins = [21, 20]
-ultrasonic3_pins = [5, 6]
-ultrasonic4_pins = [15, 14]
+ultrasonic2_pins = [15, 14]
+ultrasonic3_pins = [21, 20]
+ultrasonic4_pins = [5, 6]
 
 
 def get_ultrasonic(ultrasonic_number):

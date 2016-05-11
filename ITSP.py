@@ -1,6 +1,7 @@
 from math import *
 import Rpi_stepper
 import ultrasonic
+import time
 
 # Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
@@ -127,10 +128,10 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
     for counter in range(4):
         absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
     counter = 0
+    print absolute_distance
     for distance in absolute_distance:
         if distance >= 2 and distance <= 92:
             distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
-            print distance_accuracy_scaling_factor
             obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
             if 0 <= obstacle_location[0] < map_width and 0 <= obstacle_location[1] < map_width:
                 current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
@@ -139,9 +140,7 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
                 else:
                     next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
                     map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
-                counter += 1
-    for x in map_environment:
-        print x
+        counter += 1
 
 
 def get_obstacle_location(bot_absolute_location, direction, distance):
@@ -165,20 +164,25 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
 
 def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location):
     if 'L' in possible_heading_direction:
-        # function
+        print "LEFT"
+        Rpi_stepper.move_left
         Rpi_stepper.move_forward()
         bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'R' in possible_heading_direction:
-        # function
+        print "RIGHT"
+        Rpi_stepper.move_right()
         Rpi_stepper.move_forward()
         bot_coordinates[2] = (bot_coordinates[2] + 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'F' in possible_heading_direction:
+        print "FORWARD"
         Rpi_stepper.move_forward()
         update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'U' in possible_heading_direction:
-        # function
+        print "U TURN"
+        Rpi_stepper.move_right()
+        Rpi_stepper.move_right()
         Rpi_stepper.move_forward()
         if bot_coordinates[2] <= 1:
             bot_coordinates[2] += 2
@@ -209,9 +213,15 @@ def get_ultrasonic_readings():
 def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location):
     while True:
         sensor_readings = get_ultrasonic_readings()
+        print sensor_readings
         landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
+        for x in map_environment:
+            print x
         possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
-        move_motor(possible_heading_direction)
+        print possible_heading_direction
+        move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location)
+        print bot_coordinates
+        
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is
@@ -231,13 +241,14 @@ block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0]]
 
-# sensor_readings = [44, 3, 23, 4]
+sensor_readings = [158.8, 84.8, 14.3, 54.9]
 # possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
 # print possible_heading_direction
-# move_motor(possible_heading_direction)
+# move_motor(possible_heading_direction, [1, 1, 1], [30, 30])
 # landmark_update(map_environment, [1, 1, 1], sensor_readings, [30, 30])
 # update_bot_location([1, 0, 2], [30, 10])
 
+run(map_environment, block_visit_frequency, [1, 1, 1], [30, 30]) 
 '''
 0 1 East 1
 0 -1 West 3
