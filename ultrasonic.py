@@ -6,26 +6,26 @@ GPIO.cleanup()
 # instead of physical pin numbers
 GPIO.setmode(GPIO.BCM)
 ultrasonic1_pins = [7, 8]
-ultrasonic2_pins = [7, 8]
-ultrasonic3_pins = [7, 8]
-ultrasonic4_pins = [7, 8]
+ultrasonic2_pins = [21, 20]
+ultrasonic3_pins = [5, 6]
+ultrasonic4_pins = [15, 14]
 
 
 def get_ultrasonic(ultrasonic_number):
     try:
         # Define GPIO to use on Pi
         if ultrasonic_number == 1:
-            GPIO_TRIGGER = 7
-            GPIO_ECHO = 8
+            GPIO_TRIGGER = ultrasonic1_pins[0]
+            GPIO_ECHO = ultrasonic1_pins[1]
         if ultrasonic_number == 2:
-            GPIO_TRIGGER = 7
-            GPIO_ECHO = 8
+            GPIO_TRIGGER = ultrasonic2_pins[0]
+            GPIO_ECHO = ultrasonic2_pins[1]
         if ultrasonic_number == 3:
-            GPIO_TRIGGER = 7
-            GPIO_ECHO = 8
+            GPIO_TRIGGER = ultrasonic3_pins[0]
+            GPIO_ECHO = ultrasonic3_pins[1]
         if ultrasonic_number == 4:
-            GPIO_TRIGGER = 7
-            GPIO_ECHO = 8
+            GPIO_TRIGGER = ultrasonic4_pins[0]
+            GPIO_ECHO = ultrasonic4_pins[1]
 
         print "Ultrasonic Measurement"
 

@@ -7,10 +7,6 @@ motor2_pins = [9, 10, 22, 27]
 delay = 20
 steps_forward = 187
 
-for pin in range(4):
-    GPIO.setup(motor1_pins[pin], GPIO.OUT)
-    GPIO.setup(motor2_pins[pin], GPIO.OUT)
-
 try:
 
     def forward(delay, steps):
@@ -52,6 +48,9 @@ try:
                 GPIO.output(motor2_pins[pin], output[pin])
 
     def move_forward():
+        for pin in range(4):
+            GPIO.setup(motor1_pins[pin], GPIO.OUT)
+            GPIO.setup(motor2_pins[pin], GPIO.OUT)
         forward(int(delay) / 1000.0, int(steps_forward))
 
     def move_backward():

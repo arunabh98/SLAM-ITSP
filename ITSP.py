@@ -1,6 +1,6 @@
 from math import *
 import Rpi_stepper
-import ultrasonic.py
+import ultrasonic
 
 # Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
@@ -175,7 +175,8 @@ def move_motor(possible_heading_direction):
 
 def get_ultrasonic_readings():
     for us_pin in range(4):
-        sensor_readings[us_pin - 1] = ultrasonic.get_ultrasonic(us_pin)
+        sensor_readings[us_pin] = ultrasonic.get_ultrasonic(us_pin + 1)
+    return sensor_readings
 
 '''
 The bot has to move exactly 20cm forward while moving from one
@@ -196,12 +197,12 @@ block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0]]
 sensor_readings = [5, 22, 6, 4]
-possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
-print possible_heading_direction
-move_motor(possible_heading_direction)
-landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
+# possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
+# print possible_heading_direction
+# move_motor(possible_heading_direction)
 # landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
-
+# landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
+print get_ultrasonic_readings()
 '''
 0 1 East 1
 0 -1 West 3
