@@ -7,6 +7,6 @@ sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 sock.connect((bd_addr, port))
 
 def data(map_environment, direction):
-    sock.send("map: " + str(map_environment))
-    time.sleep(5)
+    sock.send("map: " + str(map_environment) + "\n direction: " + str(direction))
+    # time.sleep(5)
     
