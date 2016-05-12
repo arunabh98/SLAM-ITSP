@@ -2,6 +2,7 @@ from math import *
 import Rpi_stepper
 import ultrasonic
 import send_data
+import imu
 
 '''
 The first two values in bot coordinates stand for x and y values.
@@ -14,7 +15,7 @@ SOUTH = 2
 WEST = 3
 
 obstacle_threshold = 0.5
-map_width = 7
+map_width = 20
 block_width = 20.0
 
 probability_obstacle_present = 0.8  # Probability that box is
@@ -27,9 +28,11 @@ probability_obstacle_absent = 0.8  # probability that box is
 map_environment = [[0.00 for i in range(map_width)] for j in range(map_width)]
 block_visit_frequency = [[0 for i in range(map_width)] for j in range(map_width)]
 # bot parameters
-bot_coordinates = [3, 3, 0]
-bot_absolute_location = [70, 70]
+bot_coordinates = [10, 10, 0]
+bot_absolute_location = [210, 210]
 bot_width = 18.0
+steps_forward = 60
+steps_turn = 34
 
 
 def get_block_coordinate(bot_coordinates, direction):
@@ -167,22 +170,57 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
 
 def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency):
     if 'L' in possible_heading_direction:
-        print "LEFT"
-        Rpi_stepper.move_left()
+        print("LEFT")
+        curr_angle = imu.get_angle()
+        Rpi_stepper.move_left(steps_turn)
+        next_angle = imu.get_angle() 
+        diff_angle = abs(next_angle - curr_angle)
+        if diff_angle > 180:
+            big_angle = max(next_angle, curr_angle)
+            small_angle = min(next_angle, curr_angle)
+            diff_angle = abs((360 - big_angle) + small_angle)
+        steps = abs(90 - diff_angle)/7.2
+        if steps > 0:
+            if diff_angle > 90:
+                Rpi_stepper.move_right(steps)
+            elif diff_angle < 90:
+                Rpi_stepper.move_left(steps)
         bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'R' in possible_heading_direction:
-        print "RIGHT"
-        Rpi_stepper.move_right()
+        print("RIGHT")
+        curr_angle = imu.get_angle()
+        Rpi_stepper.move_right(steps_turn)
+        next_angle = imu.get_angle() 
+        diff_angle = abs(next_angle - curr_angle)
+        if diff_angle > 180:
+            big_angle = max(next_angle, curr_angle)
+            small_angle = min(next_angle, curr_angle)
+            diff_angle = abs((360 - big_angle) + small_angle)
+        steps = abs(90 - diff_angle)/7.2
+        if steps > 0:
+            if diff_angle > 90:
+                Rpi_stepper.move_left(steps)
+            elif diff_angle < 90:
+                Rpi_stepper.move_right(steps)
         bot_coordinates[2] = (bot_coordinates[2] + 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'F' in possible_heading_direction:
-        print "FORWARD"
-        Rpi_stepper.move_forward()
+        print("FORWARD")
+        Rpi_stepper.move_forward(steps_forward)
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'U' in possible_heading_direction:
-        print "U TURN"
-        Rpi_stepper.move_back()
+        print("U TURN")
+        curr_angle = imu.get_angle()
+        Rpi_stepper.move_back(steps_turn)
+        next_angle = imu.get_angle() 
+        diff_angle = abs(next_angle - curr_angle)
+        steps = abs(180 - diff_angle)/7.2
+        if steps > 0:
+            if diff_angle > 180:
+                Rpi_stepper.move_right(steps)
+            elif diff_angle < 180:
+                Rpi_stepper.move_left(steps)
         if bot_coordinates[2] <= 1:
             bot_coordinates[2] += 2
         elif bot_coordinates[2] > 1:
@@ -214,15 +252,15 @@ def get_ultrasonic_readings():
 def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location):
     while True:
         sensor_readings = get_ultrasonic_readings()
-        print sensor_readings
+        print(sensor_readings)
         landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
         for x in map_environment:
-            print x
+            print(x)
         send_data.data(map_environment, bot_coordinates)
         possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
         move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency)
         for x in block_visit_frequency:
-            print x
+            print(x)
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is

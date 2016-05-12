@@ -63,6 +63,5 @@ def get_ultrasonic(ultrasonic_number):
         return round(distance, 2)
     except KeyboardInterrupt:
         GPIO.cleanup()
-
     # Reset GPIO settings
     GPIO.cleanup()
