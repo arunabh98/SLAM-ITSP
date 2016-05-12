@@ -15,7 +15,7 @@ SOUTH = 2
 WEST = 3
 
 obstacle_threshold = 0.5
-map_width = 20
+map_width = 13
 block_width = 20.0
 
 probability_obstacle_present = 0.8  # Probability that box is
@@ -28,9 +28,9 @@ probability_obstacle_absent = 0.8  # probability that box is
 map_environment = [[0.00 for i in range(map_width)] for j in range(map_width)]
 block_visit_frequency = [[0 for i in range(map_width)] for j in range(map_width)]
 # bot parameters
-bot_angle = imu.get_angle()
-bot_coordinates = [10, 10, 0]
-bot_absolute_location = [210, 210]
+
+bot_coordinates = [6, 6, 0]
+bot_absolute_location = [130, 130]
 bot_width = 18.0
 steps_forward = 60
 steps_turn = 34
@@ -168,57 +168,67 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
     obstacle_block_y = floor(obstacle_y / block_width)
     return [obstacle_block_x, obstacle_block_y]
 
-
-def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency):
+def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency, bot_angle):
+    steps = 0
     if 'L' in possible_heading_direction:
         print("LEFT")
         Rpi_stepper.move_left(steps_turn)
         curr_angle = imu.get_angle()
         predicted_angle = (bot_angle - 90) % 360
-        steps = abs(predicted_angle - curr_angle) / 7.2
+        steps = floor(abs(predicted_angle - curr_angle)*34 / 90)
         if steps > 0:
-            if (predicted_angle > curr_angle) > 90:
-                Rpi_stepper.move_left(steps)
-            elif (predicted_angle < curr_angle) < 90:
-                Rpi_stepper.move_right(steps)
-        bot_angle = (bot_angle - 90) % 360
+            if abs(predicted_angle - curr_angle) < 180:
+                if (predicted_angle - curr_angle) > 0:
+                    Rpi_stepper.correct_left(steps)
+                elif (predicted_angle - curr_angle) < 0:
+                    Rpi_stepper.correct_right(steps)
+        bot_angle = predicted_angle
+        Rpi_stepper.move_forward(43)
         bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
+        return ['L', bot_angle]
     elif 'R' in possible_heading_direction:
         print("RIGHT")
         Rpi_stepper.move_right(steps_turn)
         curr_angle = imu.get_angle()
         predicted_angle = (bot_angle + 90) % 360
-        steps = abs(predicted_angle - curr_angle) / 7.2
+        steps = floor(abs(predicted_angle - curr_angle)*34 / 90)
         if steps > 0:
-            if (predicted_angle > curr_angle) > 90:
-                Rpi_stepper.move_right(steps)
-            elif (predicted_angle < curr_angle) < 90:
-                Rpi_stepper.move_left(steps)
-        bot_angle = (bot_angle + 90) % 360
+            if abs(predicted_angle - curr_angle) < 180:
+                if (predicted_angle - curr_angle) > 0:
+                    Rpi_stepper.correct_right(steps)
+                elif (predicted_angle - curr_angle) < 0:
+                    Rpi_stepper.correct_left(steps)
+        bot_angle = predicted_angle
+        Rpi_stepper.move_forward(43)
         bot_coordinates[2] = (bot_coordinates[2] + 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
+        return ['R', bot_angle]
     elif 'F' in possible_heading_direction:
         print("FORWARD")
         Rpi_stepper.move_forward(steps_forward)
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
+        return ['F', bot_angle]
     elif 'U' in possible_heading_direction:
         print("U TURN")
         Rpi_stepper.move_back(steps_turn)
         curr_angle = imu.get_angle()
         predicted_angle = (bot_angle + 180) % 360
-        steps = abs(predicted_angle - curr_angle) / 7.2
+        steps = floor(abs(predicted_angle - curr_angle)*34 / 90)
         if steps > 0:
-            if (predicted_angle > curr_angle) > 90:
-                Rpi_stepper.move_left(steps)
-            elif (predicted_angle < curr_angle) < 90:
-                Rpi_stepper.move_right(steps)
-        bot_angle = (bot_angle + 180) % 360
+            if abs(predicted_angle - curr_angle) < 180:
+                if (predicted_angle - curr_angle) > 0:
+                    Rpi_stepper.correct_right(steps)
+                elif (predicted_angle - curr_angle) < 0:
+                    Rpi_stepper.correct_left(steps)
+        bot_angle = predicted_angle
+        Rpi_stepper.move_forward(60)
         if bot_coordinates[2] <= 1:
             bot_coordinates[2] += 2
         elif bot_coordinates[2] > 1:
             bot_coordinates[2] -= 2
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
+        return ['U', bot_angle]
 
 
 def update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency):
@@ -242,17 +252,17 @@ def get_ultrasonic_readings():
 
 
 def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location):
+    bot_angle = imu.get_angle()
     while True:
         sensor_readings = get_ultrasonic_readings()
-        print(sensor_readings)
         landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
         for x in map_environment:
             print(x)
-        send_data.data(map_environment, bot_coordinates)
         possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
-        move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency)
-        for x in block_visit_frequency:
-            print(x)
+        print bot_angle
+        [direction, bot_angle] = move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency, bot_angle)
+        send_data.data(map_environment, direction)
+        
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is
@@ -261,16 +271,6 @@ block to other. The radius of the wheel that we are using is
 though we have to test this on the surface that are bot will run upon
 '''
 
-
-# TEST
-# sensor_readings = [8, 8, 60, 4]
-# landmark_update(map_environment, [3, 3, 0], sensor_readings, [70, 70])
-# for x in map_environment:
-#     print x
-# for y in block_visit_frequency:
-#     print y
-# possible_heading_direction = move(map_environment, block_visit_frequency, [3, 3, 0])
-# print possible_heading_direction
 run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location)
 '''
 0 1 East 1
