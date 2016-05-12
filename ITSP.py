@@ -182,9 +182,7 @@ def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_locatio
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'U' in possible_heading_direction:
         print "U TURN"
-        Rpi_stepper.move_right()
-        Rpi_stepper.move_right()
-        Rpi_stepper.move_forward()
+        Rpi_stepper.move_back()
         if bot_coordinates[2] <= 1:
             bot_coordinates[2] += 2
         elif bot_coordinates[2] > 1:
