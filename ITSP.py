@@ -7,7 +7,7 @@ The third value denotes the direction in which the bot is facing.
 '''
 bot_coordinates = [0, 0, 0]
 obstacle_threshold = 0.5
-map_width = 10
+map_width = 4
 
 
 def get_block_coordinate(bot_coordinates, direction):
@@ -27,16 +27,21 @@ def block_frequency_coordinate(coordinates):
 def move(map_environment, block_visit_frequency, bot_coordinates):
     possible_direction = []
     for i in [0, 1]:
-        if map_environment[bot_coordinates[0] + i][bot_coordinates[1] + int(not i)] < obstacle_threshold:
-            if i == 0:
-                possible_direction.append(1)
-            else:
-                possible_direction.append(2)
+        if (bot_coordinates[0] + i) < map_width and (bot_coordinates[1] + int(not i)) < map_width:
+            if map_environment[bot_coordinates[0] + i][bot_coordinates[1] + int(not i)] < obstacle_threshold:
+                if i == 0:
+                    if bot_coordinates[1] + int(not i) < 10:
+                        possible_direction.append(1)
+                else:
+                    if bot_coordinates[0] + i < 10:
+                        possible_direction.append(2)
         if map_environment[bot_coordinates[0] - i][bot_coordinates[1] - int(not i)] < obstacle_threshold:
             if i == 0:
-                possible_direction.append(3)
+                if bot_coordinates[1] - int(not i) >= 0:
+                    possible_direction.append(3)
             else:
-                possible_direction.append(0)
+                if bot_coordinates[0] - i >= 0:
+                    possible_direction.append(0)
     print possible_direction
     min_frequency_blocks_direction = []
     min_frequency_blocks = []
@@ -75,14 +80,14 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
     print possible_heading_direction
 # TEST
 map_environment = [[0, 0, 0, 0],
-                   [0, 0, 1, 0],
                    [0, 0, 0, 0],
+                   [0, 0, 0, 1],
                    [0, 0, 0, 0]]
-block_visit_frequency = [[0, 1, 0, 0],
-                         [2, 0, 0, 0],
-                         [0, 1, 0, 0],
-                         [0, 0, 0, 0]]
-move(map_environment, block_visit_frequency, [1, 1, 3])
+block_visit_frequency = [[0, 0, 0, 0],
+                         [0, 0, 0, 0],
+                         [0, 0, 0, 0],
+                         [0, 0, 1, 0]]
+move(map_environment, block_visit_frequency, [3, 3, 0])
 
 '''
 0 1 East 1
