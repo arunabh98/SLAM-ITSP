@@ -1,3 +1,6 @@
+from math import *
+
+# Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
 block_visit_frequency = [[0 for i in range(10)] for j in range(10)]
 '''
@@ -8,6 +11,8 @@ The third value denotes the direction in which the bot is facing.
 bot_coordinates = [0, 0, 0]
 obstacle_threshold = 0.5
 map_width = 4
+block_width = 20.0
+bot_absolute_location = [0, 0] # Exact X and Y coordinate kept track by stepper motor
 
 
 def get_block_coordinate(bot_coordinates, direction):
@@ -78,16 +83,70 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
         elif abs(bot_coordinates[2] - direction) == 2:
             possible_heading_direction.append('U')
     print possible_heading_direction
+
+'''
+Variable to hold the distances by the Ultrasonic sensors. First
+Value in the array will be the front facing sensor,
+second - right sensor, third - bottom sensor, fourth - left sensor
+'''
+sensor_readings = [0, 0, 0, 0]
+absolute_direction_sensors = [0, 1, 2, 3]
+absolute_distance = [0, 0, 0, 0]
+
+
+def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location):
+    absolute_direction_sensors[0] = bot_coordinates[2]
+    absolute_direction_sensors[1] = (bot_coordinates[2] + 1) % 4
+    absolute_direction_sensors[3] = (bot_coordinates[2] - 1) % 4
+    if bot_coordinates[2] < 2:
+        absolute_direction_sensors[2] = bot_coordinates[2] + 2
+    else:
+        absolute_direction_sensors[2] = bot_coordinates[2] - 2
+    print absolute_direction_sensors
+    for counter in range(4):
+        absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
+    print absolute_distance
+    counter = 0
+    for distance in absolute_distance:
+        obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
+        print obstacle_location
+        map_environment[int(obstacle_location[0])][int(obstacle_location[1])] += 0.5
+        counter += 1
+    for x in map_environment:
+        print x
+
+def get_obstacle_location(bot_absolute_location, direction, distance):
+
+    if direction == 0:
+        obstacle_x = bot_absolute_location[0] - distance
+        obstacle_y = bot_absolute_location[1]
+    if direction == 1:
+        obstacle_x = bot_absolute_location[0]
+        obstacle_y = bot_absolute_location[1] + distance
+    if direction == 2:
+        obstacle_x = bot_absolute_location[0] + distance
+        obstacle_y = bot_absolute_location[1]
+    if direction == 3:
+        obstacle_x = bot_absolute_location[0]
+        obstacle_y = bot_absolute_location[1] - distance
+    obstacle_block_x = floor(obstacle_x/block_width)
+    obstacle_block_y = floor(obstacle_y/block_width)
+    return [obstacle_block_x, obstacle_block_y]
+
+
+
 # TEST
 map_environment = [[0, 0, 0, 0],
                    [0, 0, 0, 0],
-                   [0, 0, 0, 1],
+                   [0, 0, 0, 0],
                    [0, 0, 0, 0]]
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 1, 0]]
-move(map_environment, block_visit_frequency, [3, 3, 0])
+sensor_readings = [15, 30, 30, 20]
+# move(map_environment, block_visit_frequency, [3, 3, 0])
+landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 
 '''
 0 1 East 1
