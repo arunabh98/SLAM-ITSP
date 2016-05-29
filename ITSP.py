@@ -8,22 +8,34 @@ The first two values in bot coordinates stand for x and y values.
 The third value denotes the direction in which the bot is facing.
 0 stands for North, 1 for East, 2 for South, 3 for West
 '''
+NORTH = 0
+EAST = 1
+SOUTH = 2
+WEST = 3
 bot_coordinates = [0, 0, 0]
 obstacle_threshold = 0.5
 map_width = 4
 block_width = 20.0
-bot_absolute_location = [0, 0] # Exact X and Y coordinate kept track by stepper motor
+# Exact X and Y coordinate kept track by stepper motor
+bot_absolute_location = [0, 0]
+bot_width = 18.0
+probability_obstacle_present = 0.8  # Probability that box is
+# present and sensor returns correctly
+
+probability_obstacle_absent = 0.8  # probability that box is
+# absent and sensor returns correctly
 
 
 def get_block_coordinate(bot_coordinates, direction):
-    if direction == 0:
+    if direction == NORTH:
         return [bot_coordinates[0] - 1, bot_coordinates[1]]
-    if direction == 1:
+    if direction == EAST:
         return [bot_coordinates[0], bot_coordinates[1] + 1]
-    if direction == 2:
+    if direction == SOUTH:
         return [bot_coordinates[0] + 1, bot_coordinates[1]]
-    if direction == 3:
+    if direction == WEST:
         return [bot_coordinates[0], bot_coordinates[1] - 1]
+
 
 def block_frequency_coordinate(coordinates):
     return block_visit_frequency[coordinates[0]][coordinates[1]]
@@ -47,17 +59,14 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
             else:
                 if bot_coordinates[0] - i >= 0:
                     possible_direction.append(0)
-    print possible_direction
     min_frequency_blocks_direction = []
     min_frequency_blocks = []
     possible_block_coordinates = []
     for direction in possible_direction:
         possible_block_coordinates.append(get_block_coordinate(bot_coordinates, direction))
-    print possible_block_coordinates
     block_frequency_list = []
     for block_coordinate in possible_block_coordinates:
         block_frequency_list.append(block_frequency_coordinate(block_coordinate))
-    print block_frequency_list
     min_block_frequency = min(block_frequency_list)
     counter = 0
     for block_frequency in block_frequency_list:
@@ -65,7 +74,6 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
             min_frequency_blocks.append(possible_block_coordinates[counter])
             min_frequency_blocks_direction.append(possible_direction[counter])
         counter += 1
-    print min_frequency_blocks_direction
     possible_heading_direction = []
     for direction in min_frequency_blocks_direction:
         if direction == bot_coordinates[2]:
@@ -102,51 +110,54 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
         absolute_direction_sensors[2] = bot_coordinates[2] + 2
     else:
         absolute_direction_sensors[2] = bot_coordinates[2] - 2
-    print absolute_direction_sensors
     for counter in range(4):
         absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
-    print absolute_distance
     counter = 0
     for distance in absolute_distance:
         obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
-        print obstacle_location
-        map_environment[int(obstacle_location[0])][int(obstacle_location[1])] += 0.5
+        current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
+        if current_probability_obstacle == 0:
+            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8
+        else:
+            next_probability = probability_obstacle_present*current_probability_obstacle/(probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))
+            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
         counter += 1
     for x in map_environment:
         print x
 
+
 def get_obstacle_location(bot_absolute_location, direction, distance):
 
     if direction == 0:
-        obstacle_x = bot_absolute_location[0] - distance
+        obstacle_x = bot_absolute_location[0] - distance - bot_width
         obstacle_y = bot_absolute_location[1]
     if direction == 1:
         obstacle_x = bot_absolute_location[0]
-        obstacle_y = bot_absolute_location[1] + distance
+        obstacle_y = bot_absolute_location[1] + distance + bot_width
     if direction == 2:
-        obstacle_x = bot_absolute_location[0] + distance
+        obstacle_x = bot_absolute_location[0] + distance + bot_width
         obstacle_y = bot_absolute_location[1]
     if direction == 3:
         obstacle_x = bot_absolute_location[0]
-        obstacle_y = bot_absolute_location[1] - distance
-    obstacle_block_x = floor(obstacle_x/block_width)
-    obstacle_block_y = floor(obstacle_y/block_width)
+        obstacle_y = bot_absolute_location[1] - distance - bot_width
+    obstacle_block_x = floor(obstacle_x / block_width)
+    obstacle_block_y = floor(obstacle_y / block_width)
     return [obstacle_block_x, obstacle_block_y]
-
 
 
 # TEST
 map_environment = [[0, 0, 0, 0],
-                   [0, 0, 0, 0],
+                   [1, 0, 0, 0],
                    [0, 0, 0, 0],
                    [0, 0, 0, 0]]
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0],
-                         [0, 0, 1, 0]]
-sensor_readings = [15, 30, 30, 20]
-# move(map_environment, block_visit_frequency, [3, 3, 0])
-landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
+                         [0, 0, 0, 0]]
+sensor_readings = [5, 22, 6, 4]
+# move(map_environment, block_visit_frequency, [0, 0, 0])
+# landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
+# landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 
 '''
 0 1 East 1
@@ -154,7 +165,7 @@ landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 1 0 South 2
 -1 0 North 0
 
-left 
+left
 N W -3
 E N 1
 S E 1
@@ -166,7 +177,7 @@ E S -1
 S W -1
 W N 3
 
-U Turn 
+U Turn
 N S -2
 E W -2
 S N  2
