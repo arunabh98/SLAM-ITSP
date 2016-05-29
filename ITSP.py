@@ -47,18 +47,18 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
         if (bot_coordinates[0] + i) < map_width and (bot_coordinates[1] + int(not i)) < map_width:
             if map_environment[bot_coordinates[0] + i][bot_coordinates[1] + int(not i)] < obstacle_threshold:
                 if i == 0:
-                    if bot_coordinates[1] + int(not i) < 10:
-                        possible_direction.append(1)
+                    if bot_coordinates[1] + int(not i) < map_width:
+                        possible_direction.append(EAST)
                 else:
-                    if bot_coordinates[0] + i < 10:
-                        possible_direction.append(2)
+                    if bot_coordinates[0] + i < map_width:
+                        possible_direction.append(SOUTH)
         if map_environment[bot_coordinates[0] - i][bot_coordinates[1] - int(not i)] < obstacle_threshold:
             if i == 0:
                 if bot_coordinates[1] - int(not i) >= 0:
-                    possible_direction.append(3)
+                    possible_direction.append(WEST)
             else:
                 if bot_coordinates[0] - i >= 0:
-                    possible_direction.append(0)
+                    possible_direction.append(NORTH)
     min_frequency_blocks_direction = []
     min_frequency_blocks = []
     possible_block_coordinates = []
@@ -99,7 +99,19 @@ second - right sensor, third - bottom sensor, fourth - left sensor
 '''
 sensor_readings = [0, 0, 0, 0]
 absolute_direction_sensors = [0, 1, 2, 3]
+# absolute distance will hold distances of objects in absolute directions - NSEW
 absolute_distance = [0, 0, 0, 0]
+
+
+'''
+The maximum range which the ultrasonic sensor can sense is 92cm. We have set it
+like that. The accuracy of the sensor is inversely proportional to distance of 
+the block.
+2 cm scaling factor = 1
+92cm scaling factor = 4 
+'''
+maximum_dist_obstacle = 92
+minimum_dist_obstacle = 2
 
 
 def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location):
@@ -114,12 +126,14 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
         absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
     counter = 0
     for distance in absolute_distance:
+        distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
+        print distance_accuracy_scaling_factor
         obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
         current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
         if current_probability_obstacle == 0:
-            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8
+            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
         else:
-            next_probability = probability_obstacle_present*current_probability_obstacle/(probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))
+            next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
             map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
         counter += 1
     for x in map_environment:
@@ -147,13 +161,13 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
 
 # TEST
 map_environment = [[0, 0, 0, 0],
-                   [1, 0, 0, 0],
+                   [0, 0, 0, 0],
                    [0, 0, 0, 0],
                    [0, 0, 0, 0]]
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
-                         [0, 0, 0, 0],
-                         [0, 0, 0, 0]]
+                         [0, 0, 0, 1],
+                         [0, 0, 0, 1]]
 sensor_readings = [5, 22, 6, 4]
 # move(map_environment, block_visit_frequency, [0, 0, 0])
 # landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
