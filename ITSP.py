@@ -105,7 +105,7 @@ absolute_distance = [0, 0, 0, 0]
 
 '''
 The maximum range which the ultrasonic sensor can sense is 92cm. We have set it
-like that. The accuracy of the sensor is inversely proportional to distance of 
+like that. The accuracy of the sensor is inversely proportional to distance of
 the block.
 2 cm scaling factor = 1
 92cm scaling factor = 4 
@@ -126,16 +126,17 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
         absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
     counter = 0
     for distance in absolute_distance:
-        distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
-        print distance_accuracy_scaling_factor
-        obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
-        current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
-        if current_probability_obstacle == 0:
-            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
-        else:
-            next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
-            map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
-        counter += 1
+        if distance >= 2 and distance <= 92:
+            distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
+            print distance_accuracy_scaling_factor
+            obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
+            current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
+            if current_probability_obstacle == 0:
+                map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
+            else:
+                next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
+                map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
+            counter += 1
     for x in map_environment:
         print x
 
@@ -159,6 +160,20 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
     return [obstacle_block_x, obstacle_block_y]
 
 
+'''
+The bot has to move exactly 20cm forward while moving from one
+block to other. The radius of the wheel that we are using is
+3.4cm. In one step (1.8 degree) of stepper motor it will move by
+0.1068cm. Therfore we may have to move by 187 steps to move forward
+though we have to test this on the surface that are bot will run upon
+'''
+steps_for_forward = 187
+
+
+def move_forward():
+    # move steper motor by 187 steps
+    pass
+
 # TEST
 map_environment = [[0, 0, 0, 0],
                    [0, 0, 0, 0],
@@ -167,9 +182,9 @@ map_environment = [[0, 0, 0, 0],
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 1],
-                         [0, 0, 0, 1]]
+                         [0, 0, 2, 0]]
 sensor_readings = [5, 22, 6, 4]
-# move(map_environment, block_visit_frequency, [0, 0, 0])
+# move(map_environment, block_visit_frequency, [3, 3, 3])
 # landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 # landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 
