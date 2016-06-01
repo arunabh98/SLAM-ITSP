@@ -1,76 +1,56 @@
 import RPi.GPIO as GPIO
 import time
 
-# Variables
-
-delay = 0.0055
-steps = 500
-
 GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
 
-# Enable GPIO pins for  ENA and ENB for stepper
+enable_pin = 18
+coil_A_1_pin = 4
+coil_A_2_pin = 17
+coil_B_1_pin = 23
+coil_B_2_pin = 24
 
-enable_a = 18
-enable_b = 22
-
-# Enable pins for IN1-4 to control step sequence
-
-coil_A_1_pin = 23
-coil_A_2_pin = 24
-coil_B_1_pin = 4
-coil_B_2_pin = 17
-
-# Set pin states
-
-GPIO.setup(enable_a, GPIO.OUT)
-GPIO.setup(enable_b, GPIO.OUT)
+GPIO.setup(enable_pin, GPIO.OUT)
 GPIO.setup(coil_A_1_pin, GPIO.OUT)
 GPIO.setup(coil_A_2_pin, GPIO.OUT)
 GPIO.setup(coil_B_1_pin, GPIO.OUT)
 GPIO.setup(coil_B_2_pin, GPIO.OUT)
 
-# Set ENA and ENB to high to enable stepper
+GPIO.output(enable_pin, 1)
 
-GPIO.output(enable_a, True)
-GPIO.output(enable_b, True)
+def forward(delay, steps):  
+  for i in range(0, steps):
+    setStep(1, 0, 1, 0)
+    time.sleep(delay)
+    setStep(0, 1, 1, 0)
+    time.sleep(delay)
+    setStep(0, 1, 0, 1)
+    time.sleep(delay)
+    setStep(1, 0, 0, 1)
+    time.sleep(delay)
 
-# Function for step sequence
+def backwards(delay, steps):  
+  for i in range(0, steps):
+    setStep(1, 0, 0, 1)
+    time.sleep(delay)
+    setStep(0, 1, 0, 1)
+    time.sleep(delay)
+    setStep(0, 1, 1, 0)
+    time.sleep(delay)
+    setStep(1, 0, 1, 0)
+    time.sleep(delay)
 
-
+  
 def setStep(w1, w2, w3, w4):
-    GPIO.output(coil_A_1_pin, w1)
-    GPIO.output(coil_A_2_pin, w2)
-    GPIO.output(coil_B_1_pin, w3)
-    GPIO.output(coil_B_2_pin, w4)
-
-
-def forward(delay, steps):
-    for i in range(0, steps):
-        setStep(1, 0, 1, 0)
-        time.sleep(delay)
-        setStep(0, 1, 1, 0)
-        time.sleep(delay)
-        setStep(0, 1, 0, 1)
-        time.sleep(delay)
-        setStep(1, 0, 0, 1)
-        time.sleep(delay)
-
-
-def backwards(delay, steps):
-    for i in range(0, steps):
-        setStep(1, 0, 0, 1)
-        time.sleep(delay)
-        setStep(0, 1, 0, 1)
-        time.sleep(delay)
-        setStep(0, 1, 1, 0)
-        time.sleep(delay)
-        setStep(1, 0, 1, 0)
-        time.sleep(delay)
+  GPIO.output(coil_A_1_pin, w1)
+  GPIO.output(coil_A_2_pin, w2)
+  GPIO.output(coil_B_1_pin, w3)
+  GPIO.output(coil_B_2_pin, w4)
 
 while True:
-    delay = raw_input("Delay between steps (milliseconds)?")
-    steps = raw_input("How many steps forward? ")
-    forward(int(delay) / 1000.0, int(steps))
-    steps = raw_input("How many steps backwards? ")
-    backwards(int(delay) / 1000.0, int(steps))
+  delay = raw_input("Delay between steps (milliseconds)?")
+  steps = raw_input("How many steps forward? ")
+  forward(int(delay) / 1000.0, int(steps))
+  steps = raw_input("How many steps backwards? ")
+  backwards(int(delay) / 1000.0, int(steps))
+
+GPIO.cleanup()
