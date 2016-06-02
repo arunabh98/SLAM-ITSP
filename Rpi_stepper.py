@@ -1,56 +1,60 @@
 import RPi.GPIO as GPIO
 import time
- 
+
 GPIO.setmode(GPIO.BCM)
- 
-enable_pin = 18
-coil_A_1_pin = 4
-coil_A_2_pin = 17
-coil_B_1_pin = 23
-coil_B_2_pin = 24
- 
-GPIO.setup(enable_pin, GPIO.OUT)
-GPIO.setup(coil_A_1_pin, GPIO.OUT)
-GPIO.setup(coil_A_2_pin, GPIO.OUT)
-GPIO.setup(coil_B_1_pin, GPIO.OUT)
-GPIO.setup(coil_B_2_pin, GPIO.OUT)
- 
-GPIO.output(enable_pin, 1)
-try: 
-    def forward(delay, steps):  
+motor1_pins = [4, 17, 23, 24]
+motor2_pins = [9, 10, 22, 27]
+delay = 20
+steps_forward = 187
+
+for pin in range(4):
+    GPIO.setup(motor1_pins[pin], GPIO.OUT)
+    GPIO.setup(motor2_pins[pin], GPIO.OUT)
+
+try:
+
+    def forward(delay, steps):
         for i in range(0, steps):
-            setStep(1, 0, 0, 0)
+            setStep(1, [1, 0, 0, 0])
+            setStep(2, [1, 0, 0, 0])
             time.sleep(delay)
-            setStep(0, 0, 1, 0)
+            setStep(1, [0, 0, 1, 0])
+            setStep(2, [0, 0, 1, 0])
             time.sleep(delay)
-            setStep(0, 1, 0, 0)
+            setStep(1, [0, 1, 0, 0])
+            setStep(2, [0, 1, 0, 0])
             time.sleep(delay)
-            setStep(0, 0, 0, 1)
+            setStep(1, [0, 0, 0, 1])
+            setStep(2, [0, 0, 0, 1])
             time.sleep(delay)
- 
-    def backwards(delay, steps):  
+
+    def backwards(delay, steps):
         for i in range(0, steps):
-            setStep(0, 0, 0, 1)
+            setStep(1, [0, 0, 0, 1])
+            setStep(2, [0, 0, 0, 1])
             time.sleep(delay)
-            setStep(0, 1, 0, 0)
-   	    time.sleep(delay)
-   	    setStep(0, 0, 1, 0)
-    	    time.sleep(delay)
-    	    setStep(1, 0, 0, 0)
+            setStep(1, [0, 1, 0, 0])
+            setStep(2, [0, 1, 0, 0])
             time.sleep(delay)
- 
-  
-    def setStep(w1, w2, w3, w4):
-        GPIO.output(coil_A_1_pin, w1)
-        GPIO.output(coil_A_2_pin, w2)
-        GPIO.output(coil_B_1_pin, w3)
-        GPIO.output(coil_B_2_pin, w4)
- 
-    while True:
-        delay = raw_input("Delay between steps (milliseconds)?")
-        steps = raw_input("How many steps forward? ")
-        forward(int(delay) / 1000.0, int(steps))
-        steps = raw_input("How many steps backwards? ")
-        backwards(int(delay) / 1000.0, int(steps))
+            setStep(1, [0, 0, 1, 0])
+            setStep(2, [0, 0, 1, 0])
+            time.sleep(delay)
+            setStep(1, [1, 0, 0, 0])
+            setStep(2, [1, 0, 0, 0])
+            time.sleep(delay)
+
+    def setStep(motor, output):
+        if motor == 1:
+            for pin in range(4):
+                GPIO.output(motor1_pins[pin], output[pin])
+        if motor == 2:
+            for pin in range(4):
+                GPIO.output(motor2_pins[pin], output[pin])
+
+    def move_forward():
+        forward(int(delay) / 1000.0, int(steps_forward))
+
+    def move_backward():
+        backwards(int(delay) / 1000.0, int(steps_forward))
 except KeyboardInterrupt:
     GPIO.cleanup()

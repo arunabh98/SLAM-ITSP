@@ -1,4 +1,6 @@
 from math import *
+import Rpi_stepper
+import ultrasonic.py
 
 # Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
@@ -90,7 +92,7 @@ def move(map_environment, block_visit_frequency, bot_coordinates):
                 possible_heading_direction.append('R')
         elif abs(bot_coordinates[2] - direction) == 2:
             possible_heading_direction.append('U')
-    print possible_heading_direction
+    return possible_heading_direction
 
 '''
 Variable to hold the distances by the Ultrasonic sensors. First
@@ -160,6 +162,21 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
     return [obstacle_block_x, obstacle_block_y]
 
 
+def move_motor(possible_heading_direction):
+    if 'L' in possible_heading_direction:
+        print "left"
+    elif 'R' in possible_heading_direction:
+        print "Right"
+    elif 'F' in possible_heading_direction:
+        Rpi_stepper.move_forward()
+    elif 'U' in possible_heading_direction:
+        print "U turn"
+
+
+def get_ultrasonic_readings():
+    for us_pin in range(4):
+        sensor_readings[us_pin - 1] = ultrasonic.get_ultrasonic(us_pin)
+
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is
@@ -167,25 +184,22 @@ block to other. The radius of the wheel that we are using is
 0.1068cm. Therfore we may have to move by 187 steps to move forward
 though we have to test this on the surface that are bot will run upon
 '''
-steps_for_forward = 187
 
-
-def move_forward():
-    # move steper motor by 187 steps
-    pass
 
 # TEST
-map_environment = [[0, 0, 0, 0],
+map_environment = [[0, 1, 0, 0],
                    [0, 0, 0, 0],
-                   [0, 0, 0, 0],
+                   [0, 1, 0, 0],
                    [0, 0, 0, 0]]
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
-                         [0, 0, 0, 1],
-                         [0, 0, 2, 0]]
+                         [0, 0, 0, 0],
+                         [0, 0, 0, 0]]
 sensor_readings = [5, 22, 6, 4]
-# move(map_environment, block_visit_frequency, [3, 3, 3])
-# landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
+possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
+print possible_heading_direction
+move_motor(possible_heading_direction)
+landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 # landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
 
 '''
