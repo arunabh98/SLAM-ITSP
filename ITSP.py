@@ -202,7 +202,8 @@ def update_bot_location(bot_coordinates, bot_absolute_location):
 
 def get_ultrasonic_readings():
     for us_pin in range(4):
-        sensor_readings[us_pin - 1] = ultrasonic.get_ultrasonic(us_pin)
+        sensor_readings[us_pin] = ultrasonic.get_ultrasonic(us_pin + 1)
+    return sensor_readings
 
 
 def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location):
@@ -229,12 +230,14 @@ block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0]]
-sensor_readings = [44, 3, 23, 4]
+
+# sensor_readings = [44, 3, 23, 4]
 # possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
 # print possible_heading_direction
 # move_motor(possible_heading_direction)
-landmark_update(map_environment, [1, 1, 1], sensor_readings, [30, 30])
+# landmark_update(map_environment, [1, 1, 1], sensor_readings, [30, 30])
 # update_bot_location([1, 0, 2], [30, 10])
+
 '''
 0 1 East 1
 0 -1 West 3
