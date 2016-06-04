@@ -1,6 +1,6 @@
 from math import *
-import Rpi_stepper
-import ultrasonic.py
+# import Rpi_stepper
+# import ultrasonic
 
 # Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
@@ -162,21 +162,55 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
     return [obstacle_block_x, obstacle_block_y]
 
 
-def move_motor(possible_heading_direction):
+def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location):
     if 'L' in possible_heading_direction:
-        print "left"
+        # function
+        Rpi_stepper.move_forward()
+        bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
+        update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'R' in possible_heading_direction:
-        print "Right"
+        # function
+        Rpi_stepper.move_forward()
+        bot_coordinates[2] = (bot_coordinates[2] + 1) % 4
+        update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'F' in possible_heading_direction:
         Rpi_stepper.move_forward()
+        update_bot_location(bot_coordinates, bot_absolute_location)
     elif 'U' in possible_heading_direction:
-        print "U turn"
+        # function
+        Rpi_stepper.move_forward()
+        if bot_coordinates[2] <= 1:
+            bot_coordinates[2] += 2
+        elif bot_coordinates[2] > 1:
+            bot_coordinates[2] -= 2
+        update_bot_location(bot_coordinates, bot_absolute_location)
+
+
+def update_bot_location(bot_coordinates, bot_absolute_location):
+    if bot_coordinates[2] == 0:
+        bot_absolute_location[0] -= block_width
+    if bot_coordinates[2] == 1:
+        bot_absolute_location[1] += block_width
+    if bot_coordinates[2] == 2:
+        bot_absolute_location[0] += block_width
+    if bot_coordinates[2] == 3:
+        bot_absolute_location[1] -= block_width
+    bot_coordinates[0] = int(bot_absolute_location[0] / 20)
+    bot_coordinates[1] = int(bot_absolute_location[1] / 20)
+    print bot_coordinates
 
 
 def get_ultrasonic_readings():
     for us_pin in range(4):
         sensor_readings[us_pin - 1] = ultrasonic.get_ultrasonic(us_pin)
 
+
+def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_location):
+    while True:
+        sensor_readings = get_ultrasonic_readings()
+        landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
+        possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
+        move_motor(possible_heading_direction)
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is
@@ -187,21 +221,20 @@ though we have to test this on the surface that are bot will run upon
 
 
 # TEST
-map_environment = [[0, 1, 0, 0],
+map_environment = [[0, 0, 0, 0],
                    [0, 0, 0, 0],
-                   [0, 1, 0, 0],
+                   [0, 0, 0, 0],
                    [0, 0, 0, 0]]
 block_visit_frequency = [[0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0],
                          [0, 0, 0, 0]]
-sensor_readings = [5, 22, 6, 4]
-possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
-print possible_heading_direction
-move_motor(possible_heading_direction)
-landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
-# landmark_update(map_environment, [1, 1, 0], sensor_readings, [30, 30])
-
+sensor_readings = [44, 3, 23, 4]
+# possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
+# print possible_heading_direction
+# move_motor(possible_heading_direction)
+landmark_update(map_environment, [1, 1, 1], sensor_readings, [30, 30])
+# update_bot_location([1, 0, 2], [30, 10])
 '''
 0 1 East 1
 0 -1 West 3
