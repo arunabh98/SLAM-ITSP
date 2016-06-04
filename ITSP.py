@@ -1,6 +1,6 @@
 from math import *
-# import Rpi_stepper
-# import ultrasonic
+import Rpi_stepper
+import ultrasonic
 
 # Each block will be a square of side 20cm
 map_environment = [[0 for i in range(10)] for j in range(10)]
@@ -132,13 +132,14 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
             distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
             print distance_accuracy_scaling_factor
             obstacle_location = get_obstacle_location(bot_absolute_location, counter, distance)
-            current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
-            if current_probability_obstacle == 0:
-                map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
-            else:
-                next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
-                map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
-            counter += 1
+            if 0 <= obstacle_location[0] < map_width and 0 <= obstacle_location[1] < map_width:
+                current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
+                if current_probability_obstacle == 0:
+                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
+                else:
+                    next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
+                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
+                counter += 1
     for x in map_environment:
         print x
 
@@ -146,17 +147,17 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
 def get_obstacle_location(bot_absolute_location, direction, distance):
 
     if direction == 0:
-        obstacle_x = bot_absolute_location[0] - distance - bot_width
+        obstacle_x = bot_absolute_location[0] - distance - bot_width / 2
         obstacle_y = bot_absolute_location[1]
     if direction == 1:
         obstacle_x = bot_absolute_location[0]
-        obstacle_y = bot_absolute_location[1] + distance + bot_width
+        obstacle_y = bot_absolute_location[1] + distance + bot_width / 2
     if direction == 2:
-        obstacle_x = bot_absolute_location[0] + distance + bot_width
+        obstacle_x = bot_absolute_location[0] + distance + bot_width / 2
         obstacle_y = bot_absolute_location[1]
     if direction == 3:
         obstacle_x = bot_absolute_location[0]
-        obstacle_y = bot_absolute_location[1] - distance - bot_width
+        obstacle_y = bot_absolute_location[1] - distance - bot_width / 2
     obstacle_block_x = floor(obstacle_x / block_width)
     obstacle_block_y = floor(obstacle_y / block_width)
     return [obstacle_block_x, obstacle_block_y]
@@ -197,7 +198,6 @@ def update_bot_location(bot_coordinates, bot_absolute_location):
         bot_absolute_location[1] -= block_width
     bot_coordinates[0] = int(bot_absolute_location[0] / 20)
     bot_coordinates[1] = int(bot_absolute_location[1] / 20)
-    print bot_coordinates
 
 
 def get_ultrasonic_readings():
