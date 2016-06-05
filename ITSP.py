@@ -1,11 +1,8 @@
 from math import *
 import Rpi_stepper
 import ultrasonic
-import time
+# import time
 
-# Each block will be a square of side 20cm
-map_environment = [[0 for i in range(10)] for j in range(10)]
-block_visit_frequency = [[0 for i in range(10)] for j in range(10)]
 '''
 The first two values in bot coordinates stand for x and y values.
 The third value denotes the direction in which the bot is facing.
@@ -17,7 +14,7 @@ SOUTH = 2
 WEST = 3
 bot_coordinates = [0, 0, 0]
 obstacle_threshold = 0.5
-map_width = 4
+map_width = 7
 block_width = 20.0
 # Exact X and Y coordinate kept track by stepper motor
 bot_absolute_location = [0, 0]
@@ -27,6 +24,10 @@ probability_obstacle_present = 0.8  # Probability that box is
 
 probability_obstacle_absent = 0.8  # probability that box is
 # absent and sensor returns correctly
+
+# Each block will be a square of side 20cm
+map_environment = [[0 for i in range(map_width)] for j in range(map_width)]
+block_visit_frequency = [[0 for i in range(map_width)] for j in range(map_width)]
 
 
 def get_block_coordinate(bot_coordinates, direction):
@@ -102,7 +103,7 @@ second - right sensor, third - bottom sensor, fourth - left sensor
 '''
 sensor_readings = [0, 0, 0, 0]
 absolute_direction_sensors = [0, 1, 2, 3]
-# absolute distance will hold distances of objects in absolute directions - NSEW
+# absolute distance will hold distances of objects in absolute directions - NESW
 absolute_distance = [0, 0, 0, 0]
 
 
@@ -125,10 +126,10 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
         absolute_direction_sensors[2] = bot_coordinates[2] + 2
     else:
         absolute_direction_sensors[2] = bot_coordinates[2] - 2
+    counter = 0
     for counter in range(4):
         absolute_distance[absolute_direction_sensors[counter]] = sensor_readings[counter]
     counter = 0
-    print absolute_distance
     for distance in absolute_distance:
         if distance >= 2 and distance <= 92:
             distance_accuracy_scaling_factor = 1 + float(3*(distance - 2))/float(maximum_dist_obstacle - minimum_dist_obstacle)
@@ -136,10 +137,10 @@ def landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absol
             if 0 <= obstacle_location[0] < map_width and 0 <= obstacle_location[1] < map_width:
                 current_probability_obstacle = map_environment[int(obstacle_location[0])][int(obstacle_location[1])]
                 if current_probability_obstacle == 0:
-                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = 0.8/distance_accuracy_scaling_factor
+                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = round(0.8/distance_accuracy_scaling_factor, 1)
                 else:
-                    next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle))*distance_accuracy_scaling_factor)
-                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = next_probability
+                    next_probability = float(probability_obstacle_present*current_probability_obstacle)/float((probability_obstacle_present*current_probability_obstacle + (1 - probability_obstacle_absent)*(1 - current_probability_obstacle)))
+                    map_environment[int(obstacle_location[0])][int(obstacle_location[1])] = round(next_probability, 1)
         counter += 1
 
 
@@ -221,7 +222,7 @@ def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_lo
         print possible_heading_direction
         move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location)
         print bot_coordinates
-        
+
 '''
 The bot has to move exactly 20cm forward while moving from one
 block to other. The radius of the wheel that we are using is
@@ -232,23 +233,51 @@ though we have to test this on the surface that are bot will run upon
 
 
 # TEST
-map_environment = [[0, 0, 0, 0],
-                   [0, 0, 0, 0],
-                   [0, 0, 0, 0],
-                   [0, 0, 0, 0]]
-block_visit_frequency = [[0, 0, 0, 0],
-                         [0, 0, 0, 0],
-                         [0, 0, 0, 0],
-                         [0, 0, 0, 0]]
-
-sensor_readings = [158.8, 84.8, 14.3, 54.9]
-# possible_heading_direction = move(map_environment, block_visit_frequency, [1, 1, 1])
+map_environment = [[0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]]
+block_visit_frequency = [[0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0]]
+# bot_absolute_location = [90, 90]
+# bot_coordinates = [4, 4, 0]
+# sensor_readings = [24, 3, 3, 5]
+# possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
 # print possible_heading_direction
-# move_motor(possible_heading_direction, [1, 1, 1], [30, 30])
-# landmark_update(map_environment, [1, 1, 1], sensor_readings, [30, 30])
-# update_bot_location([1, 0, 2], [30, 10])
-
-run(map_environment, block_visit_frequency, [1, 1, 1], [30, 30]) 
+# # move_motor(possible_heading_direction, [4, 4, 0], [70, 70])
+# landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
+# for x in map_environment:
+#     print x
+# possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
+# print possible_heading_direction
+# update_bot_location(bot_coordinates, bot_absolute_location)
+# print bot_absolute_location, bot_coordinates
+# possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
+# print possible_heading_direction
+# sensor_readings = [4, 25, 25, 110]
+# landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
+# for x in map_environment:
+#     print x
+# possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
+# print possible_heading_direction
+# bot_coordinates[2] = 1
+# update_bot_location(bot_coordinates, bot_absolute_location)
+# print bot_absolute_location, bot_coordinates
+# possible_heading_direction = move(map_environment, block_visit_frequency, bot_coordinates)
+# print possible_heading_direction
+# sensor_readings = [4, 4, 150, 25]
+# landmark_update(map_environment, bot_coordinates, sensor_readings, bot_absolute_location)
+# for x in map_environment:
+#     print x
+# run(map_environment, block_visit_frequency, [1, 1, 1], [30, 30])
 '''
 0 1 East 1
 0 -1 West 3
