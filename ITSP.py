@@ -28,6 +28,7 @@ probability_obstacle_absent = 0.8  # probability that box is
 map_environment = [[0.00 for i in range(map_width)] for j in range(map_width)]
 block_visit_frequency = [[0 for i in range(map_width)] for j in range(map_width)]
 # bot parameters
+bot_angle = imu.get_angle()
 bot_coordinates = [10, 10, 0]
 bot_absolute_location = [210, 210]
 bot_width = 18.0
@@ -171,38 +172,30 @@ def get_obstacle_location(bot_absolute_location, direction, distance):
 def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency):
     if 'L' in possible_heading_direction:
         print("LEFT")
-        curr_angle = imu.get_angle()
         Rpi_stepper.move_left(steps_turn)
-        next_angle = imu.get_angle() 
-        diff_angle = abs(next_angle - curr_angle)
-        if diff_angle > 180:
-            big_angle = max(next_angle, curr_angle)
-            small_angle = min(next_angle, curr_angle)
-            diff_angle = abs((360 - big_angle) + small_angle)
-        steps = abs(90 - diff_angle)/7.2
+        curr_angle = imu.get_angle()
+        predicted_angle = (bot_angle - 90) % 360
+        steps = abs(predicted_angle - curr_angle) / 7.2
         if steps > 0:
-            if diff_angle > 90:
-                Rpi_stepper.move_right(steps)
-            elif diff_angle < 90:
+            if (predicted_angle > curr_angle) > 90:
                 Rpi_stepper.move_left(steps)
+            elif (predicted_angle < curr_angle) < 90:
+                Rpi_stepper.move_right(steps)
+        bot_angle = (bot_angle - 90) % 360
         bot_coordinates[2] = (bot_coordinates[2] - 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'R' in possible_heading_direction:
         print("RIGHT")
-        curr_angle = imu.get_angle()
         Rpi_stepper.move_right(steps_turn)
-        next_angle = imu.get_angle() 
-        diff_angle = abs(next_angle - curr_angle)
-        if diff_angle > 180:
-            big_angle = max(next_angle, curr_angle)
-            small_angle = min(next_angle, curr_angle)
-            diff_angle = abs((360 - big_angle) + small_angle)
-        steps = abs(90 - diff_angle)/7.2
+        curr_angle = imu.get_angle()
+        predicted_angle = (bot_angle + 90) % 360
+        steps = abs(predicted_angle - curr_angle) / 7.2
         if steps > 0:
-            if diff_angle > 90:
-                Rpi_stepper.move_left(steps)
-            elif diff_angle < 90:
+            if (predicted_angle > curr_angle) > 90:
                 Rpi_stepper.move_right(steps)
+            elif (predicted_angle < curr_angle) < 90:
+                Rpi_stepper.move_left(steps)
+        bot_angle = (bot_angle + 90) % 360
         bot_coordinates[2] = (bot_coordinates[2] + 1) % 4
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'F' in possible_heading_direction:
@@ -211,22 +204,21 @@ def move_motor(possible_heading_direction, bot_coordinates, bot_absolute_locatio
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
     elif 'U' in possible_heading_direction:
         print("U TURN")
-        curr_angle = imu.get_angle()
         Rpi_stepper.move_back(steps_turn)
-        next_angle = imu.get_angle() 
-        diff_angle = abs(next_angle - curr_angle)
-        steps = abs(180 - diff_angle)/7.2
+        curr_angle = imu.get_angle()
+        predicted_angle = (bot_angle + 180) % 360
+        steps = abs(predicted_angle - curr_angle) / 7.2
         if steps > 0:
-            if diff_angle > 180:
-                Rpi_stepper.move_right(steps)
-            elif diff_angle < 180:
+            if (predicted_angle > curr_angle) > 90:
                 Rpi_stepper.move_left(steps)
+            elif (predicted_angle < curr_angle) < 90:
+                Rpi_stepper.move_right(steps)
+        bot_angle = (bot_angle + 180) % 360
         if bot_coordinates[2] <= 1:
             bot_coordinates[2] += 2
         elif bot_coordinates[2] > 1:
             bot_coordinates[2] -= 2
         update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency)
-        
 
 
 def update_bot_location(bot_coordinates, bot_absolute_location, block_visit_frequency):
