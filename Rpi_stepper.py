@@ -143,7 +143,17 @@ try:
             GPIO.setup(motor2_pins[pin], GPIO.OUT)
         forward(int(delay) / 1000.0, int(12))
         left(int(delay) / 1000.0, int(steps_turn))
-        forward(int(delay)/1000.0,int(43))
+
+    def correct_left(steps_turn):
+        for pin in range(4):
+            GPIO.setup(motor1_pins[pin], GPIO.OUT)
+            GPIO.setup(motor2_pins[pin], GPIO.OUT)
+        left(int(delay) / 1000.0, int(steps_turn))
+    def correct_right(steps_turn):
+        for pin in range(4):
+            GPIO.setup(motor1_pins[pin], GPIO.OUT)
+            GPIO.setup(motor2_pins[pin], GPIO.OUT)
+        right(int(delay) / 1000.0, int(steps_turn))
 
     def move_right(steps_turn):
         for pin in range(4):
@@ -151,7 +161,6 @@ try:
             GPIO.setup(motor2_pins[pin], GPIO.OUT)
         forward(int(delay) / 1000.0, int(12))
         right(int(delay) / 1000.0, int(steps_turn))
-        forward(int(delay)/1000.0,int(43))
     
     def move_back(steps_turn):
         for pin in range(4):
@@ -160,6 +169,6 @@ try:
         forward(int(delay) / 1000.0, int(12))
         right(int(delay) / 1000.0, int(steps_turn))
         right(int(delay) / 1000.0, int(steps_turn))
-        forward(int(delay)/1000.0,int(43))
+        
 except KeyboardInterrupt:
     GPIO.cleanup()
