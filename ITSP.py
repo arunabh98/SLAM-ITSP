@@ -28,7 +28,6 @@ probability_obstacle_absent = 0.8  # probability that box is
 map_environment = [[0.00 for i in range(map_width)] for j in range(map_width)]
 block_visit_frequency = [[0 for i in range(map_width)] for j in range(map_width)]
 # bot parameters
-
 bot_coordinates = [6, 6, 0]
 bot_absolute_location = [130, 130]
 bot_width = 18.0
@@ -262,6 +261,7 @@ def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_lo
         print bot_angle
         [direction, bot_angle] = move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency, bot_angle)
         send_data.data(map_environment, direction)
+
         
 '''
 The bot has to move exactly 20cm forward while moving from one
