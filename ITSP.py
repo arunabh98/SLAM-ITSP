@@ -3,6 +3,7 @@ import Rpi_stepper
 import ultrasonic
 import send_data
 import imu
+import shortest_path
 
 '''
 The first two values in bot coordinates stand for x and y values.
@@ -14,6 +15,8 @@ EAST = 1
 SOUTH = 2
 WEST = 3
 
+end_mapping = False
+goal = [0, 0]
 obstacle_threshold = 0.5
 map_width = 13
 block_width = 20.0
@@ -261,6 +264,36 @@ def run(map_environment, block_visit_frequency, bot_coordinates, bot_absolute_lo
         print bot_angle
         [direction, bot_angle] = move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency, bot_angle)
         send_data.data(map_environment, direction)
+        if end_mapping == True:
+            break
+    print "The robot's location is: "
+    print "x - coordinate: " + str(bot_coordinates[0])
+    print "y - coordinate: " + str(bot_coordinates[1])
+    print "Set goal location...."
+    goal[0] = int(raw_input("Enter goal x - coordinate: "))
+    goal[1] = int(raw_input("Enter goal y - coordinate: "))
+    optimal_policy = shortest_path.optimum_policy(map_environment, goal, 1)
+    for x in optimal_policy:
+        print x
+    while True:
+        possible_heading_direction = []
+        direction = optimal_policy[bot_coordinates[0]][bot_coordinates[1]]
+        if direction == bot_coordinates[2]:
+            possible_heading_direction.append('F')
+        elif abs(bot_coordinates[2] - direction) == 1:
+            if bot_coordinates[2] - direction == 1:
+                possible_heading_direction.append('L')
+            elif bot_coordinates[2] - direction == -1:
+                possible_heading_direction.append('R')
+        elif abs(bot_coordinates[2] - direction) == 3:
+            if bot_coordinates[2] - direction == -3:
+                possible_heading_direction.append('L')
+            elif bot_coordinates[2] - direction == 3:
+                possible_heading_direction.append('R')
+        elif abs(bot_coordinates[2] - direction) == 2:
+            possible_heading_direction.append('U')
+        print possible_heading_direction[0]
+        move_motor(possible_heading_direction, bot_coordinates, bot_absolute_location, block_visit_frequency, bot_angle)
 
         
 '''

@@ -1,25 +1,11 @@
-
-
-grid = [[0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 1, 1, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 1, 1, 1, 1, 0],
-        [0, 0, 1, 0, 1, 1, 0]]
-init = [0, 0]
-goal = [len(grid)-1, len(grid[0])-1]
-cost = 1 # the cost associated with moving from a cell to an adjacent one
-
-delta = [[-1, 0 ], # go up
-         [ 0, -1], # go left
-         [ 1, 0 ], # go down
-         [ 0, 1 ]] # go right
-
-delta_name = ['^', '<', 'v', '>']
-
 def optimum_policy(grid,goal,cost):
-    # ----------------------------------------
-    # modify code below
-    # ----------------------------------------
+    delta = [[-1, 0 ], # go up
+             [ 0, -1], # go left
+             [ 1, 0 ], # go down
+             [ 0, 1 ]] # go right
+
+
+    delta_name = [0, 3, 2, 1]
     value = [[99 for row in range(len(grid[0]))] for col in range(len(grid))]
     value1 = [[[99 for k in xrange(4)] for j in xrange(len(grid[0]))] for i in xrange(len(grid))]
     policy = [[' ' for row in range(len(grid[0]))] for col in range(len(grid))]
@@ -46,8 +32,5 @@ def optimum_policy(grid,goal,cost):
                                 change = True
                                 value[x][y] = v2
                                 policy[x][y] = delta_name[a]
-    policy[len(grid)-1][len(grid[0])-1] = '*'
+    policy[goal[0]][goal[1]] = 9
     return policy
-
-for x in optimum_policy(grid,goal,cost):
-    print x
